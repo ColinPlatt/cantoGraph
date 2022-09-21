@@ -37,17 +37,12 @@ read DB_USER
 echo "db password:"
 echo "============================================================"
 read DB_USER_PASS
-echo "root password:"
-echo "============================================================"
-read ROOT_PASS
-
 
 
 echo export RPC_URL=${RPC_URL} >> $HOME/.bash_profile
 echo export DB_NAME=${DB_NAME} >> $HOME/.bash_profile
 echo export DB_USER=${DB_USER} >> $HOME/.bash_profile
 echo export DB_USER_PASS=${DB_USER_PASS} >> $HOME/.bash_profile
-echo export ROOT_PASS=${ROOT_PASS} >> $HOME/.bash_profile
 source ~/.bash_profile
 
 #UPDATE APT -hold for testing
