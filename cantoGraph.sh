@@ -5,119 +5,125 @@ do
 
 # Logo
 
-echo "========================================================================================================================"
-curl -s https://raw.githubusercontent.com/StakeTake/script/main/logo.sh | bash
-echo "========================================================================================================================"
+echo "=================================================================================================================================================="
+curl -s https://raw.githubusercontent.com/ColinPlatt/cantoGraph/main/logo.sh | bash
+echo "=================================================================================================================================================="
 
 # Menu
 
 PS3='Select an action: '
 options=(
-"Install Node"
+"Install Graph Node"
 "Check Log"
-"Check balance"
-"Request tokens in discord"
-"Create Validator"
 "Exit")
 select opt in "${options[@]}"
 do
 case $opt in
 
-"Install Node")
+"Install Graph Node")
 echo "============================================================"
 echo "Install start"
 echo "============================================================"
-echo "Setup NodeName:"
+echo "Setup RPC URL:"
 echo "============================================================"
-read NODENAME
+read RPC_URL
 echo "============================================================"
-echo "Setup WalletName:"
+echo "Name db:"
 echo "============================================================"
-read WALLETNAME
-echo export NODENAME=${NODENAME} >> $HOME/.bash_profile
-echo export WALLETNAME=${WALLETNAME} >> $HOME/.bash_profile
-echo export CHAIN_ID="canto_7700-1" >> $HOME/.bash_profile
+read DB_NAME
+echo "db username:"
+echo "============================================================"
+read DB_USER
+echo "db password:"
+echo "============================================================"
+read DB_USER_PASS
+echo "root password:"
+echo "============================================================"
+read ROOT_PASS
+
+
+
+echo export RPC_URL=${RPC_URL} >> $HOME/.bash_profile
+echo export DB_NAME=${DB_NAME} >> $HOME/.bash_profile
+echo export DB_USER=${DB_USER} >> $HOME/.bash_profile
+echo export DB_USER_PASS=${DB_USER_PASS} >> $HOME/.bash_profile
+echo export ROOT_PASS=${ROOT_PASS} >> $HOME/.bash_profile
 source ~/.bash_profile
 
-#UPDATE APT
-sudo apt update && sudo apt upgrade -y
-sudo apt install curl tar wget clang pkg-config libssl-dev jq build-essential bsdmainutils git make ncdu gcc git jq chrony liblz4-tool -y
+#UPDATE APT -hold for testing
+#sudo apt update && sudo apt upgrade -y
+#sudo apt install curl tar wget clang pkg-config libpq-dev libssl-dev jq build-essential bsdmainutils git make ncdu gcc git jq chrony liblz4-tool -y
 
-#INSTALL GO
-rm -r /usr/local/go
-rm -r /usr/lib/go-1.13
-wget https://golang.org/dl/go1.18.1.linux-amd64.tar.gz; \
-rm -rv /usr/local/go; \
-tar -C /usr/local -xzf go1.18.1.linux-amd64.tar.gz && \
-rm -v go1.18.1.linux-amd64.tar.gz && \
-echo "export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin" >> ~/.bash_profile && \
-source ~/.bash_profile && \
-go version
-
-rm -rf $HOME/Canto-Testnet $HOME/.cantod
-#INSTALL
-cd $HOME
-git clone https://github.com/Canto-Network/Canto.git
-cd Canto
-git checkout main && git pull
-git checkout v2.0.0
-make install
-
-cantod init $NODENAME --chain-id $CHAIN_ID
-
-
+#INSTALL RUST
+echo "Installing Rust..."
 echo "============================================================"
-echo "Be sure to write down the mnemonic!"
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+source $HOME/.bashrc
+source $HOME/.cargo/env
+
+
+#INSTALL POSTGRESQL
+echo "Installing PostgreSQL..."
 echo "============================================================"
-#WALLET
-cantod keys add $WALLETNAME
+sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+apt-get -y install postgresql postgresql-client
 
-cantod tendermint unsafe-reset-all --home $HOME/.cantod
-rm $HOME/.cantod/config/genesis.json
-wget -O $HOME/.cantod/config/genesis.json "https://raw.githubusercontent.com/StakeTake/guidecosmos/main/canto/canto_7700-1/genesis.json"
-wget -O $HOME/.cantod/config/addrbook.json "https://raw.githubusercontent.com/StakeTake/guidecosmos/main/canto/canto_7700-1/addrbook.json"
-
-SEEDS=""
-PEERS="ef45c32b232b772dd82b2f801f0e6abd3842e66c@164.90.154.41:26656"; \
-sed -i.bak -e "s/^seeds *=.*/seeds = \"$SEEDS\"/; s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" $HOME/.cantod/config/config.toml
-
-
-# config pruning
-indexer="null"
-pruning="custom"
-pruning_keep_recent="100"
-pruning_keep_every="0"
-pruning_interval="10"
-
-sed -i -e "s/^indexer *=.*/indexer = \"$indexer\"/" $HOME/.cantod/config/config.toml
-sed -i -e "s/^pruning *=.*/pruning = \"$pruning\"/" $HOME/.cantod/config/app.toml
-sed -i -e "s/^pruning-keep-recent *=.*/pruning-keep-recent = \"$pruning_keep_recent\"/" $HOME/.cantod/config/app.toml
-sed -i -e "s/^pruning-keep-every *=.*/pruning-keep-every = \"$pruning_keep_every\"/" $HOME/.cantod/config/app.toml
-sed -i -e "s/^pruning-interval *=.*/pruning-interval = \"$pruning_interval\"/" $HOME/.cantod/config/app.toml
-
-
-
-tee $HOME/cantod.service > /dev/null <<EOF
-[Unit]
-Description=canto
-After=network.target
-[Service]
-Type=simple
-User=$USER
-ExecStart=$(which cantod) start
-Restart=on-failure
-RestartSec=10
-LimitNOFILE=65535
-[Install]
-WantedBy=multi-user.target
+#CONFIGURING POSTGRESQL
+echo "Configuring PostgreSQL db..."
+echo "============================================================"
+su postgres <<EOF
+createdb  $DB_NAME;
+psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_USER_PASS';"
+psql -c "grant all privileges on database $DB_NAME to $DB_USER;"
+echo "Postgres User '$DB_USER' and database '$DB_NAME' created."
 EOF
 
-sudo mv $HOME/cantod.service /etc/systemd/system/
+#INSTALL IPFS
+echo "Installing IPFS..."
+echo "============================================================"
+wget https://dist.ipfs.tech/kubo/v0.15.0/kubo_v0.15.0_linux-amd64.tar.gz
+tar -xvzf kubo_v0.15.0_linux-amd64.tar.gz
+cd kubo
+sh ./install.sh
+
+echo "Installing Graph Node..."
+echo "============================================================"
+#INSTALL GRAPH NODE
+cd $HOME
+git clone https://github.com/graphprotocol/graph-node
+carge build
+
+
+#WRITE SYSTEMCTL FOR IPFS
+tee $HOME/ipfs.service > /dev/null <<EOF
+[Unit]
+Description=IPFS daemon
+After=network.target
+
+[Service]
+Environment=IPFS_PATH=~/.ipfs/datastore
+ExecStart=/usr/local/bin/ipfs daemon
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
+EOF
+
+sudo mv $HOME/ipfs.service /etc/systemd/system/
 
 # start service
 sudo systemctl daemon-reload
-sudo systemctl enable cantod
-sudo systemctl restart cantod
+sudo systemctl start ipfs
+sudo systemctl enable ipfs
+
+# start GRAPH NODE
+cd $HOME/graph-node
+cargo run -p graph-node --release -- \
+  --postgres-url postgresql://$DB_USER:$DB_USER_PASS@localhost:5432/$DB_NAME \
+  --ethereum-rpc canto:$RPC_URL \
+  --ipfs 127.0.0.1:5001
+
 
 break
 ;;
@@ -125,37 +131,6 @@ break
 "Check Log")
 
 journalctl -u cantod -f -o cat
-
-break
-;;
-
-
-"Check balance")
-cantod q bank balances $(cantod keys show $WALLETNAME -a --bech acc)
-break
-;;
-
-"Create Validator")
-cantod tx staking create-validator \
-  --amount 1000000000000000000acanto \
-  --from $WALLETNAME \
-  --commission-max-change-rate "0.05" \
-  --commission-max-rate "0.20" \
-  --commission-rate "0.05" \
-  --min-self-delegation "1" \
-  --pubkey $(cantod tendermint show-validator) \
-  --moniker $NODENAME \
-  --chain-id $CHAIN_ID \
-  --gas 300000 \
-  -y
-break
-;;
-
-"Request tokens in discord")
-echo "========================================================================================================================"
-echo "In order to receive tokens, you need to go to the Discord server
-and request tokens in the validator channel"
-echo "========================================================================================================================"
 
 break
 ;;
