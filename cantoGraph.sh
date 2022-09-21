@@ -51,8 +51,8 @@ echo export DB_USER_PASS=${DB_USER_PASS} >> $HOME/.bash_profile
 source ~/.bash_profile
 
 #UPDATE APT -hold for testing
-sudo apt update && sudo apt upgrade -y
-sudo apt install curl tar wget clang pkg-config libpq-dev libssl-dev jq build-essential bsdmainutils git make ncdu gcc git jq chrony liblz4-tool libprotobuf-dev protobuf-compiler -y
+apt update && apt upgrade -y
+apt install curl tar wget clang pkg-config libpq-dev libssl-dev jq build-essential bsdmainutils git make ncdu gcc git jq chrony liblz4-tool libprotobuf-dev protobuf-compiler -y
 
 #INSTALL RUST
 echo "Installing Rust..."
@@ -66,7 +66,7 @@ source $HOME/.cargo/env
 echo "Installing PostgreSQL..."
 echo "============================================================"
 sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 apt-get -y install postgresql postgresql-client
 
 #CONFIGURING POSTGRESQL
@@ -82,10 +82,15 @@ EOF
 #INSTALL IPFS
 echo "Installing IPFS..."
 echo "============================================================"
+cd $HOME
 wget https://dist.ipfs.tech/kubo/v0.15.0/kubo_v0.15.0_linux-amd64.tar.gz
 tar -xvzf kubo_v0.15.0_linux-amd64.tar.gz
 cd kubo
 sh ./install.sh
+
+cd $HOME
+sysctl -w net.core.rmem_max=2500000
+ipfs init
 
 echo "Installing Graph Node..."
 echo "============================================================"
@@ -95,14 +100,14 @@ git clone https://github.com/graphprotocol/graph-node
 carge build
 
 
-#WRITE SYSTEMCTL FOR IPFS
+#WRITE AND LAUNCH SYSTEMCTL FOR IPFS
 tee $HOME/ipfs.service > /dev/null <<EOF
 [Unit]
 Description=IPFS daemon
 After=network.target
 
 [Service]
-Environment=IPFS_PATH=~/.ipfs/datastore
+Environment=IPFS_PATH=$HOME/.ipfs
 ExecStart=/usr/local/bin/ipfs daemon
 Restart=on-failure
 
@@ -110,12 +115,12 @@ Restart=on-failure
 WantedBy=default.target
 EOF
 
-sudo mv $HOME/ipfs.service /etc/systemd/system/
+mv $HOME/ipfs.service /etc/systemd/system/
 
 # start service
-sudo systemctl daemon-reload
-sudo systemctl start ipfs
-sudo systemctl enable ipfs
+systemctl daemon-reload
+systemctl start ipfs
+systemctl enable ipfs
 
 # start GRAPH NODE
 cd $HOME/graph-node
