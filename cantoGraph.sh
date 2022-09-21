@@ -72,6 +72,11 @@ apt-get -y install postgresql postgresql-client
 #CONFIGURING POSTGRESQL
 echo "Configuring PostgreSQL db..."
 echo "============================================================"
+set -e
+
+mkdir db && cd db
+chmod -og&rX $HOME/db
+
 su postgres <<EOF
 createdb  $DB_NAME;
 psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_USER_PASS';"
