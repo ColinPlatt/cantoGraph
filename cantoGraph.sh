@@ -51,8 +51,8 @@ echo export ROOT_PASS=${ROOT_PASS} >> $HOME/.bash_profile
 source ~/.bash_profile
 
 #UPDATE APT -hold for testing
-#sudo apt update && sudo apt upgrade -y
-#sudo apt install curl tar wget clang pkg-config libpq-dev libssl-dev jq build-essential bsdmainutils git make ncdu gcc git jq chrony liblz4-tool -y
+sudo apt update && sudo apt upgrade -y
+sudo apt install curl tar wget clang pkg-config libpq-dev libssl-dev jq build-essential bsdmainutils git make ncdu gcc git jq chrony liblz4-tool -y
 
 #INSTALL RUST
 echo "Installing Rust..."
@@ -130,7 +130,7 @@ break
 
 "Check Log")
 
-journalctl -u cantod -f -o cat
+journalctl -u ipfs -f -o cat
 
 break
 ;;
