@@ -31,9 +31,6 @@ echo "============================================================"
 echo "Name db:"
 echo "============================================================"
 read DB_NAME
-echo "db username:"
-echo "============================================================"
-read DB_USER
 echo "db password:"
 echo "============================================================"
 read DB_USER_PASS
@@ -51,12 +48,9 @@ then
 else
     echo export DB_NAME=${DB_NAME} >> $HOME/.bash_profile
 fi
-if [ "$DB_USER" = "" ]
-then
-    echo export DB_USER="dbadmin" >> $HOME/.bash_profile
-else
-    echo export DB_USER=${DB_USER} >> $HOME/.bash_profile
-fi
+
+echo export DB_USER="postgres" >> $HOME/.bash_profile
+
 if [ "$DB_USER_PASS" = "" ]
 then
     echo export DB_USER_PASS="dbPassword" >> $HOME/.bash_profile
@@ -97,7 +91,9 @@ su postgres <<EOF
     createdb  $DB_NAME;
     psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_USER_PASS';"
     psql -c "grant all privileges on database $DB_NAME to $DB_USER;"
+    psql -c "alter role user_name superuser;"
     echo "Postgres User '$DB_USER' and database '$DB_NAME' created."
+    
 EOF
 
 
