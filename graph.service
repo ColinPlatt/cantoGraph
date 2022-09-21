@@ -1,0 +1,16 @@
+#place at: /etc/systemd/system/graphindexer.service
+
+[Unit]
+Description=Graph Indexer Node
+After=network.target 
+Wants=network.target
+[Service]
+StandardOutput=journal
+StandardError=journal
+Type=simple
+Restart=always
+RestartSec=5
+ExecStart= $HOME/graph-startup.sh
+
+[Install]
+WantedBy=default.target
