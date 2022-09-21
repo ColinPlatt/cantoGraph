@@ -90,14 +90,20 @@ echo "Configuring PostgreSQL db..."
 echo "============================================================"
 set -e
 
-mkdir db && cd db
-chmod og+rX db
+mkdir /home/db && cd /home/db
+chmod og+rX /home/db
+
+
 
 su postgres <<EOF
-createdb  $DB_NAME;
-psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_USER_PASS';"
-psql -c "grant all privileges on database $DB_NAME to $DB_USER;"
-echo "Postgres User '$DB_USER' and database '$DB_NAME' created."
+if [ "$( psql -XtAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" )" = '0' ]
+then
+    createdb  $DB_NAME;
+    psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_USER_PASS';"
+    psql -c "grant all privileges on database $DB_NAME to $DB_USER;"
+    echo "Postgres User '$DB_USER' and database '$DB_NAME' created."
+fi
+
 EOF
 
 #INSTALL IPFS
