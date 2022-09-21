@@ -91,7 +91,7 @@ echo "============================================================"
 set -e
 
 mkdir db && cd db
-chmod -og&rX $HOME/db
+chmod og+rX db
 
 su postgres <<EOF
 createdb  $DB_NAME;
