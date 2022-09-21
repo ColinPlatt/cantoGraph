@@ -94,12 +94,10 @@ mkdir /home/db && cd /home/db
 chmod og+rX /home/db
 
 su postgres <<EOF
-if [ "$( psql -XtAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" )" = '' ] then
     createdb  $DB_NAME;
     psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_USER_PASS';"
     psql -c "grant all privileges on database $DB_NAME to $DB_USER;"
     echo "Postgres User '$DB_USER' and database '$DB_NAME' created."
-fi
 EOF
 
 
