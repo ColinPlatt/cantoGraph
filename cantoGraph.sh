@@ -38,16 +38,32 @@ echo "db password:"
 echo "============================================================"
 read DB_USER_PASS
 
-
+#handle blanks with defaults
 if [ "$RPC_URL" = "" ]
 then
     echo export RPC_URL="http://139.144.35.102:8545" >> $HOME/.bash_profile
 else
     echo export RPC_URL=${RPC_URL} >> $HOME/.bash_profile
 fi
-echo export DB_NAME=${DB_NAME} >> $HOME/.bash_profile
-echo export DB_USER=${DB_USER} >> $HOME/.bash_profile
-echo export DB_USER_PASS=${DB_USER_PASS} >> $HOME/.bash_profile
+if [ "$DB_NAME" = "" ]
+then
+    echo export DB_NAME="canto_graph" >> $HOME/.bash_profile
+else
+    echo export DB_NAME=${DB_NAME} >> $HOME/.bash_profile
+fi
+if [ "$DB_USER" = "" ]
+then
+    echo export DB_USER="dbadmin" >> $HOME/.bash_profile
+else
+    echo export DB_USER=${DB_USER} >> $HOME/.bash_profile
+fi
+if [ "$DB_USER_PASS" = "" ]
+then
+    echo export DB_USER_PASS="dbPassword" >> $HOME/.bash_profile
+else
+    echo export DB_USER_PASS=${DB_USER_PASS} >> $HOME/.bash_profile
+fi
+
 source ~/.bash_profile
 
 #UPDATE APT -hold for testing
