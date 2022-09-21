@@ -39,7 +39,12 @@ echo "============================================================"
 read DB_USER_PASS
 
 
-echo export RPC_URL=${RPC_URL} >> $HOME/.bash_profile
+if [ "$RPC_URL" = "" ]
+then
+    echo export RPC_URL="http://139.144.35.102:8545" >> $HOME/.bash_profile
+else
+    echo export RPC_URL=${RPC_URL} >> $HOME/.bash_profile
+fi
 echo export DB_NAME=${DB_NAME} >> $HOME/.bash_profile
 echo export DB_USER=${DB_USER} >> $HOME/.bash_profile
 echo export DB_USER_PASS=${DB_USER_PASS} >> $HOME/.bash_profile
