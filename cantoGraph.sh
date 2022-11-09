@@ -116,7 +116,7 @@ echo "============================================================"
 #INSTALL GRAPH NODE
 cd $HOME
 git clone https://github.com/graphprotocol/graph-node
-carge build
+cargo build
 
 
 #WRITE AND LAUNCH SYSTEMCTL FOR IPFS
